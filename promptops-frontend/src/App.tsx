@@ -31,11 +31,19 @@ export default function App() {
       });
 
       setResult(response.data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to connect to Rails backend API.');
+    } catch (err: unknown) {
+      // Safely check if the error is an Axios network error
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.message || 'Failed to connect to Rails backend API.');
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unexpected structural error occurred.');
+      }
     } finally {
       setLoading(false);
     }
+
   };
 
   return (
