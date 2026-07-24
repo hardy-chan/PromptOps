@@ -58,4 +58,7 @@ group :development, :test do
   gem "rspec-rails"
   # Enforces clean code styles and patterns
   gem "rubocop-rails", require: false
+
+  # Manage local secret keys and configuration variables safely
+  gem "dotenv-rails", groups: [:development, :test]
 end
