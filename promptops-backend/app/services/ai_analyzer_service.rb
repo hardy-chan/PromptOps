@@ -30,7 +30,7 @@ class AiAnalyzerService
       req.headers["Content-Type"] = "application/json"
       req.headers["HTTP-Referer"] = "http://localhost:3000"
       req.headers["X-Title"] = "PromptOps Code Reviewer"
-      
+
       # Stringify the payload explicitly to prevent hidden transmission errors
       req.body = payload.to_json
     end
@@ -58,7 +58,7 @@ class AiAnalyzerService
   def process_success(response_body)
     parsed_json = JSON.parse(response_body)
     raw_content = parsed_json.dig("choices", 0, "message", "content").to_s.strip
-    
+
     # Defensive sanitization step: checks for and removes any rogue ```json code blocks
     cleaned_content = raw_content.gsub(/```json|```/, "").strip
     ai_data = JSON.parse(cleaned_content)

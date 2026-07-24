@@ -53,12 +53,12 @@ group :development, :test do
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
-  
+
   # The standard testing framework for senior Rails devs
   gem "rspec-rails"
   # Enforces clean code styles and patterns
   gem "rubocop-rails", require: false
 
   # Manage local secret keys and configuration variables safely
-  gem "dotenv-rails", groups: [:development, :test]
+  gem "dotenv-rails", groups: [ :development, :test ]
 end
