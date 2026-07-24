@@ -15,11 +15,17 @@ The platform is split into decoupled layers optimized for performance, scalabili
 ## 🛠️ System Architecture Flow
 
 [ React + TS Frontend ] ---> POST /api/v1/projects ---> [ Rails API ]
+
 |
+
 (Write Record & Queue Task)
+
 v
+
 [ Sidekiq Worker ] <--- Pull Worker Job <--- [ Redis Message Broker ]
+
 |
+
 +---> Fetch OpenRouter AI API ---> Update PostgreSQL Record (Completed)
 
 
