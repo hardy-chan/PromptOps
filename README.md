@@ -47,7 +47,7 @@ Navigate to the backend directory, install gems, initialize your schema, and lau
 ```bash
 cd promptops-backend
 bundle install
-rails db:create db:map
+rails db:create db:migrate
 rails server
 
 # In a separate terminal window:
