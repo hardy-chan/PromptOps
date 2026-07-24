@@ -1,0 +1,105 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+  push:
+    branches: [ master, main ]
+
+jobs:
+  backend-quality:
+    name: Backend Lint & Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: ./promptops-backend # <-- Critical for monorepos
+
+      - name: Run Security Static Analysis (Brakeman)
+        run: |
+          cd promptops-backend
+          bundle exec brakeman --no-pager
+
+      - name: Lint Ruby Style Conventions (RuboCop)
+        run: |
+          cd promptops-backend
+          bundle exec rubocop -f github
+
+  backend-tests:
+    name: Backend Test Suite (RSpec)
+    runs-on: ubuntu-latest
+    # Spins up a live PostgreSQL and Redis instance in the GitHub cloud environment
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: ./promptops-backend
+
+      - name: Initialize Database Schema
+        env:
+          RAILS_ENV: test
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/promptops_test
+        run: |
+          cd promptops-backend
+          bundle exec rails db:create db:schema:load
+
+      - name: Execute Automated Test Suite (RSpec)
+        env:
+          RAILS_ENV: test
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/promptops_test
+          OPENROUTER_API_KEY: "mock_test_key"
+        run: |
+          cd promptops-backend
+          bundle exec rspec
+
+  frontend-quality:
+    name: Frontend Lint & Compilation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./promptops-frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd promptops-frontend
+          npm ci
+
+      - name: Lint Frontend TypeScript Styles
+        run: |
+          cd promptops-frontend
+          npm run lint
