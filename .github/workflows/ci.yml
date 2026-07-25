@@ -6,9 +6,15 @@ on:
     branches: [ master, main ]
 
 jobs:
+  # -------------------------------------------------------------
+  # JOB 1: Backend Quality (Brakeman & RuboCop)
+  # -------------------------------------------------------------
   backend-quality:
     name: Backend Lint & Security Scan
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./promptops-backend
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -21,19 +27,20 @@ jobs:
           working-directory: ./promptops-backend
 
       - name: Run Security Static Analysis (Brakeman)
-        run: |
-          cd promptops-backend
-          bundle exec brakeman --no-pager
+        run: bundle exec brakeman --no-pager
 
       - name: Lint Ruby Style Conventions (RuboCop)
-        run: |
-          cd promptops-backend
-          bundle exec rubocop -f github
+        run: bundle exec rubocop -f github
 
+  # -------------------------------------------------------------
+  # JOB 2: Backend Tests (RSpec + Postgres + Redis)
+  # -------------------------------------------------------------
   backend-tests:
     name: Backend Test Suite (RSpec)
     runs-on: ubuntu-latest
-    
+    defaults:
+      run:
+        working-directory: ./promptops-backend
     services:
       postgres:
         image: postgres:15-alpine
@@ -67,19 +74,18 @@ jobs:
         env:
           RAILS_ENV: test
           DATABASE_URL: postgresql://postgres:password@localhost:5432/promptops_test
-        run: |
-          cd promptops-backend
-          bundle exec rails db:create db:schema:load
+        run: bundle exec rails db:create db:schema:load
 
       - name: Execute Automated Test Suite (RSpec)
         env:
           RAILS_ENV: test
           DATABASE_URL: postgresql://postgres:password@localhost:5432/promptops_test
           OPENROUTER_API_KEY: "mock_test_key"
-        run: |
-          cd promptops-backend
-          bundle exec rspec
+        run: bundle exec rspec
 
+  # -------------------------------------------------------------
+  # JOB 3: Frontend Quality (ESLint & Production Build)
+  # -------------------------------------------------------------
   frontend-quality:
     name: Frontend Lint & Compilation
     runs-on: ubuntu-latest
