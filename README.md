@@ -6,7 +6,7 @@ An automated code review hub that performs asynchronous code architecture audits
 
 The platform is split into decoupled layers optimized for performance, scalability, and asynchronous execution:
 
-- **Frontend SPA**: Single Page Application built with **React**, **TypeScript**, and **Vite** utilizing strict type safety (casting `unknown` error boundaries over explicit `any` captures) and crisp UI feedback.
+- **Frontend SPA**: Single Page Application built with **React**, **TypeScript**, and **Vite** utilizing strict type safety (catching unknown error boundaries and leveraging explicit Axios type guards over unsafe "any" captures) and crisp UI feedback.
 - **Backend API**: Pure REST API built with **Ruby on Rails 8** exposing secure, resource-based endpoints.
 - **AI Integration Engine**: Isolated Ruby Service Objects utilizing **Faraday** to pipeline contextual code vectors directly to **Google's Gemini 2.5 Flash** via OpenRouter, utilizing defensive payload formatting and hard token caps (`max_tokens: 1000`).
 - **Relational Database**: **PostgreSQL** managing structural data integrity across three relational tables with unique indexing and native `JSONB` data formats for fast feedback processing.
