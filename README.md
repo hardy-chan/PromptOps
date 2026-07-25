@@ -15,58 +15,39 @@ The platform is split into decoupled layers optimized for performance, scalabili
 
 ## System Architecture Flow
 
- ┌────────────────────────────────────────────────────────┐
- │                   1. USER INTERFACE                    │
- │  React + TypeScript Frontend (http://localhost:5173)   │
- └───────────────────────────┬────────────────────────────┘
-                             │
-                      POST /api/v1/projects
-                             │
-                             ▼
- ┌────────────────────────────────────────────────────────┐
- │                   2. WEB BACKEND                       │
- │         Ruby on Rails API (http://localhost:3000)      │
- └───────┬────────────────────────────────────────┬───────┘
-         │                                        │
-   Saves Pending                            Enqueues Job
-   Project State                        (perform_async)
-         │                                        │
-         ▼                                        ▼
- ┌───────────────┐                        ┌───────────────┐
- │  POSTGRESQL   │                        │  REDIS QUEUE  │
- │  Initial Rows │                        │  Job Buffer   │
- └───────────────┘                        └───────┬───────┘
-                                                  │
-                                            Pulls Workload
-                                                  │
-                                                  ▼
- ┌────────────────────────────────────────────────────────┐
- │                   3. BACKGROUND WORKER                 │
- │                     Sidekiq Process                    │
- └───────────────────────────┬────────────────────────────┘
-                             │
-                     Clean Payload &
-                  Inject OpenRouter Token
-                             │
-                             ▼
- ┌────────────────────────────────────────────────────────┐
- │                     4. AI GATEWAY                      │
- │      OpenRouter Engine ──► Google Gemini 2.5 Flash     │
- └───────────────────────────┬────────────────────────────┘
-                             │
-                    Returns Raw JSON String
-                             │
-                             ▼
- ┌────────────────────────────────────────────────────────┐
- │                 5. DATA PERSISTENCE                    │
- │   Sidekiq Parses JSON & Updates Status to 'Completed'  │
- └───────────────────────────┬────────────────────────────┘
-                             │
-                             ▼
- ┌────────────────────────────────────────────────────────┐
- │                  POSTGRESQL DATABASE                   │
- │            Saved as Native JSONB Attributes            │
- └────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    %% Define Styles and Colors
+    classDef ui fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1;
+    classDef rails fill:#f8d7da,stroke:#721c24,stroke-width:2px,color:#721c24;
+    classDef worker fill:#e2e3e5,stroke:#383d41,stroke-width:2px,color:#383d41;
+    classDef ai fill:#fff3cd,stroke:#856404,stroke-width:2px,color:#856404;
+    classDef db fill:#d4edda,stroke:#155724,stroke-width:2px,color:#155724;
+
+    %% Workflow Nodes
+    UI["1. USER INTERFACE<br>React + TS Frontend<br>(localhost:5173)"]:::ui
+    
+    Rails["2. WEB BACKEND<br>Ruby on Rails API<br>(localhost:3000)"]:::rails
+    
+    PGInit[("PostgreSQL<br>(Initial Pending Row)")]:::db
+    Redis[("Redis Queue<br>(Job Buffer)")]:::worker
+    
+    Sidekiq["3. BACKGROUND WORKER<br>Sidekiq Process"]:::worker
+    
+    Gemini["4. AI GATEWAY<br>OpenRouter Engine<br>(Gemini 2.5 Flash)"]:::ai
+    
+    PGFinal[("PostgreSQL DB<br>(JSONB Data Saved)")]:::db
+
+    %% Connections and Data Flow
+    UI -- "POST /api/v1/projects" --> Rails
+    Rails -- "Saves State" --> PGInit
+    Rails -- "Enqueues Job<br>(perform_async)" --> Redis
+    Redis -- "Pulls Workload" --> Sidekiq
+    Sidekiq -- "Cleans Payload &<br>Injects Secret Token" --> Gemini
+    Gemini -- "Returns Raw JSON String" --> Sidekiq
+    Sidekiq -- "Parses & Updates Records<br>Status: 'Completed'" --> PGFinal
+```
+
 
 
 ## Quick Start (Local Development)
