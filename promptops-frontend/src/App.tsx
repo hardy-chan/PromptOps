@@ -16,7 +16,7 @@ export default function App() {
   const [result, setResult] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -48,7 +48,7 @@ export default function App() {
 
   return (
     <div style={{ maxWidth: '600px', margin: '40px auto', padding: '20px', fontFamily: 'sans-serif' }}>
-      <h1>PromptOps AI Code Reviewer</h1>
+      <h2>PromptOps AI Code Reviewer</h2>
       <p>Submit your code to trigger an asynchronous background AI architecture audit.</p>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -85,7 +85,7 @@ export default function App() {
 
       {result && (
         <div style={{ marginTop: '20px', color: 'green', background: '#eebf', padding: '15px', borderRadius: '4px', border: '1px solid green' }}>
-          <h3>🚀 {result.message}</h3>
+          <h3>{result.message}</h3>
           <p><strong>Database Project ID:</strong> {result.project_id}</p>
           <p><strong>Database Analysis ID:</strong> {result.analysis_id}</p>
           <p><em>The backend Sidekiq worker has successfully pulled this payload and is processing the LLM request.</em></p>
